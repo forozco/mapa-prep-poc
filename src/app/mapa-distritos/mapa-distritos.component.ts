@@ -133,25 +133,20 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     const ax = svgRect ? e.clientX - svgRect.left : e.clientX;
     const ay = svgRect ? e.clientY - svgRect.top  : e.clientY;
 
-    // Mouse wheel (lines or large jumps) or pinch trackpad → zoom
-    const isWheel = e.deltaMode === 1 || e.deltaMode === 2
-                 || (e.ctrlKey)
-                 || (Math.abs(e.deltaY) > 30 && Math.abs(e.deltaX) < 5);
-
-    if (isWheel) {
-      let delta = e.deltaY;
-      if (e.deltaMode === 1) delta *= 16;
-      if (e.deltaMode === 2) delta *= 400;
-      // Pinch mac tiene deltas pequeños (~1-5), mouse wheel tiene deltas grandes (~100)
-      const factor = e.ctrlKey
-        ? Math.pow(0.96,  delta)   // pinch trackpad
-        : Math.pow(0.997, delta);  // mouse wheel
-      this._applyZoom(factor, ax, ay);
-    } else {
-      // Dos dedos trackpad sin pinch → pan
+    if (e.ctrlKey) {
+      // Pinch trackpad Mac → zoom
+      this._applyZoom(Math.pow(0.96, e.deltaY), ax, ay);
+    } else if (Math.abs(e.deltaX) > Math.abs(e.deltaY) * 0.3) {
+      // Scroll con componente horizontal → pan (trackpad dos dedos diagonal)
       this._panX -= e.deltaX;
       this._panY -= e.deltaY;
       this._commitTransform();
+    } else {
+      // Scroll vertical puro → zoom (mouse wheel o trackpad vertical)
+      let delta = e.deltaY;
+      if (e.deltaMode === 1) delta *= 16;
+      if (e.deltaMode === 2) delta *= 400;
+      this._applyZoom(Math.pow(0.997, delta), ax, ay);
     }
   }
 
