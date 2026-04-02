@@ -189,11 +189,51 @@
   border-radius: 8px;
   padding: 10px;
   position: relative;
+  overflow: hidden;
 }
 
 .mapa-svg {
   width: 100%;
   display: block;
+  will-change: transform;
+}
+
+// ── Controles de zoom ─────────────────────────────────────────────────────────
+.zoom-controls {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+}
+
+.zoom-btn {
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #444;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  transition: all 0.15s;
+
+  &:hover {
+    background: #f5f5f5;
+    border-color: #bbb;
+    color: #111;
+  }
+
+  &.zoom-reset {
+    font-size: 14px;
+  }
 }
 
 // ── Panel de info fijo arriba-derecha del mapa ─────────────────────────────────

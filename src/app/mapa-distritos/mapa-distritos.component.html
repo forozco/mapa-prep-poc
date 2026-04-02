@@ -74,13 +74,23 @@
     <!-- ── Mapa ─────────────────────────────────────────────────────────── -->
     <div class="mapa-col">
       <p class="mapa-subtitulo fw-600 mb-2">Mapa de Distritos Electorales</p>
-      <div class="mapa-wrapper">
+      <div class="mapa-wrapper" #mapaWrapper
+           (mousedown)="onDragStart($event)"
+           [style.cursor]="isDragging() ? 'grabbing' : 'grab'">
         <object
           #mapaObj
           type="image/svg+xml"
           data="assets/mapa-mexico.svg"
           class="mapa-svg"
+          style="transform-origin: 0 0;"
         ></object>
+
+        <!-- Controles de zoom -->
+        <div class="zoom-controls">
+          <button class="zoom-btn" (click)="zoomIn()"  title="Acercar">+</button>
+          <button class="zoom-btn" (click)="zoomOut()" title="Alejar">−</button>
+          <button class="zoom-btn zoom-reset" (click)="zoomReset()" title="Restaurar vista">↺</button>
+        </div>
 
         @if (tooltipVisible() && tooltipData(); as tt) {
           <div class="prep-tooltip">
