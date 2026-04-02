@@ -115,6 +115,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   zoomReset(): void {
     this._cancelMomentum();
     this._zoom = 1; this._panX = 0; this._panY = 0; this._zoomSig.set(1);
+    this._updateStrokeWidth();
     this._setTransition('250ms');
     this._commitTransform();
   }
@@ -132,6 +133,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     this._panY = cy - (cy - this._panY) * ratio;
     this._zoom = newZoom;
     this._zoomSig.set(newZoom);
+    this._updateStrokeWidth();
     this._setTransition('200ms');
     this._commitTransform();
   }
@@ -162,6 +164,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     this._panY = ay - (ay - this._panY) * ratio;
     this._zoom = newZoom;
     this._zoomSig.set(newZoom);
+    this._updateStrokeWidth();
     this._clampPan();
     this._commitTransform();
   }
@@ -421,16 +424,38 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   // ── Colorear ─────────────────────────────────────────────────────────────
   private colorear(): void {
     if (!this.svgEl || !this.datos()) return;
+
+    // Inyectar/actualizar la regla CSS para stroke-width adaptativo al zoom
+    this._updateStrokeWidth();
+
     this.svgEl.querySelectorAll<SVGPathElement>('path[id^="p-"]').forEach(path => {
       const dist = this.poligonoMap[path.id];
-      path.style.fill        = dist?.partido ? this.pastel(this.colorPartido(dist.partido)) : '#dce8f0';
-      path.style.stroke       = '#777';
-      path.style.strokeWidth  = '0.6';
-      path.style.vectorEffect = 'non-scaling-stroke';
-      path.style.transition   = 'fill 0.15s ease';
-      path.style.cursor       = 'pointer';
-      (path as any)._clave = dist?.clave ?? '';
+      path.style.fill       = dist?.partido ? this.pastel(this.colorPartido(dist.partido)) : '#dce8f0';
+      path.style.stroke     = '#777';
+      path.style.transition = 'fill 0.15s ease';
+      path.style.cursor     = 'pointer';
+      (path as any)._clave  = dist?.clave ?? '';
     });
+  }
+
+  /** Mantiene strokes en píxeles de pantalla fijos independientemente del zoom.
+   *  Al hacer zoom, los bordes de entidad cambian de color para distinguirse de los distritos. */
+  private _updateStrokeWidth(): void {
+    if (!this.svgEl) return;
+    const swDist   = Math.max(0.1,  0.6 / this._zoom).toFixed(4);
+    const swEntity = Math.max(0.15, 1.2 / this._zoom).toFixed(4);
+    // A partir de zoom 1.5 los bordes de entidad se vuelven azul oscuro
+    const entityColor = this._zoom >= 1.5 ? '#1e3a5f' : '#888';
+    let styleEl = this.svgEl.querySelector<Element>('#dyn-sw');
+    if (!styleEl) {
+      styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      styleEl.id = 'dyn-sw';
+      this.svgEl.prepend(styleEl);
+    }
+    styleEl.textContent =
+      `path[id^="p-"] { stroke-width: ${swDist}; }` +
+      `path[id^="e-"] { stroke-width: ${swEntity}; stroke: ${entityColor}; ` +
+      `transition: stroke 0.3s ease; }`;
   }
 
   private colorPartido(id: string): string {
