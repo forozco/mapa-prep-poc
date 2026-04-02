@@ -445,18 +445,22 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     if (!this.svgEl) return;
     const swDist   = Math.max(0.1,  0.6 / this._zoom).toFixed(4);
     const swEntity = Math.max(0.15, 1.2 / this._zoom).toFixed(4);
-    // A partir de zoom 1.5 los bordes de entidad se vuelven azul oscuro
-    const entityColor = this._zoom >= 1.5 ? '#1e3a5f' : '#888';
+    // En cuanto se hace cualquier zoom los bordes de entidad se vuelven azul oscuro
+    const entityColor = this._zoom > 1 ? '#1e3a5f' : '#888';
     let styleEl = this.svgEl.querySelector<Element>('#dyn-sw');
     if (!styleEl) {
       styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
       styleEl.id = 'dyn-sw';
       this.svgEl.prepend(styleEl);
     }
+    const isZoomingOut = this._zoom <= 1;
+    const duration     = isZoomingOut ? '1.4s' : '0.5s';
+    const delay        = isZoomingOut ? '0.1s' : '0s';
     styleEl.textContent =
       `path[id^="p-"] { stroke-width: ${swDist}; }` +
       `path[id^="e-"] { stroke-width: ${swEntity}; stroke: ${entityColor}; ` +
-      `transition: stroke 0.3s ease; }`;
+      `transition: stroke ${duration} cubic-bezier(0.4,0,0.2,1) ${delay}, ` +
+      `stroke-width ${duration} cubic-bezier(0.4,0,0.2,1) ${delay}; }`;
   }
 
   private colorPartido(id: string): string {
