@@ -74,8 +74,12 @@
         <!-- Controles de zoom -->
         <div class="zoom-controls">
           <button class="zoom-btn" (click)="zoomIn()"  title="Acercar">+</button>
-          <button class="zoom-btn" (click)="zoomOut()" title="Alejar">−</button>
-          <button class="zoom-btn zoom-reset" (click)="zoomReset()" title="Restaurar vista">↺</button>
+          <button class="zoom-btn" (click)="zoomOut()" [disabled]="!canZoomOut()" title="Alejar">−</button>
+          <button class="zoom-btn zoom-reset" (click)="zoomReset()" title="Restaurar vista">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9"/>
+            </svg>
+          </button>
         </div>
 
         @if (tooltipVisible() && tooltipData(); as tt) {

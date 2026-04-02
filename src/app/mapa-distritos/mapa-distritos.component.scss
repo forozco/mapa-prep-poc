@@ -246,8 +246,14 @@
     color: #111;
   }
 
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+  }
+
   &.zoom-reset {
-    font-size: 14px;
+    padding: 0;
   }
 }
 

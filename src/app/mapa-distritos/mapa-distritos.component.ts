@@ -4,6 +4,7 @@ import {
   signal, computed, ChangeDetectionStrategy
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 
 export interface Partido {
   id: string;
@@ -86,6 +87,8 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   private _panY = 0;
   private readonly ZOOM_MIN = 0.5;
   private readonly ZOOM_MAX = 4;
+  private _zoomSig = signal(1);
+  canZoomOut = computed(() => this._zoomSig() > 1);
   private _dragStartX    = 0;
   private _dragStartY    = 0;
   private _dragStartPanX = 0;
@@ -100,7 +103,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   // ── Zoom helpers ─────────────────────────────────────────────────────────
   zoomIn():    void { this._applyZoom(1.2, null, null); }
   zoomOut():   void { this._applyZoom(1 / 1.2, null, null); }
-  zoomReset(): void { this._zoom = 1; this._panX = 0; this._panY = 0; this._commitTransform(); }
+  zoomReset(): void { this._zoom = 1; this._panX = 0; this._panY = 0; this._zoomSig.set(1); this._commitTransform(); }
 
   /** Aplica el transform al SVG inline en el próximo animation frame (evita jitter) */
   private _commitTransform(): void {
@@ -123,31 +126,24 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
       this._panY = ay - (ay - this._panY) * ratio;
     }
     this._zoom = newZoom;
+    this._zoomSig.set(newZoom);
     this._commitTransform();
   }
 
   onWheelZoom(e: WheelEvent): void {
     e.preventDefault();
 
-    // Anchor point relative to the SVG element's top-left corner (transform-origin: 0 0)
-    const svgRect = this.svgEl?.getBoundingClientRect();
-    const ax = svgRect ? e.clientX - svgRect.left : e.clientX;
-    const ay = svgRect ? e.clientY - svgRect.top  : e.clientY;
-
     if (e.ctrlKey) {
-      // Pinch trackpad Mac → zoom
-      this._applyZoom(Math.pow(0.96, e.deltaY), ax, ay);
-    } else if (Math.abs(e.deltaX) > Math.abs(e.deltaY) * 0.3) {
-      // Scroll con componente horizontal → pan (trackpad dos dedos diagonal)
+      // Pinch gesture (Mac trackpad) o Ctrl+scroll (mouse) → zoom centrado en cursor
+      const svgRect = this.svgEl?.getBoundingClientRect();
+      const ax = svgRect ? e.clientX - svgRect.left : e.clientX;
+      const ay = svgRect ? e.clientY - svgRect.top  : e.clientY;
+      this._applyZoom(Math.pow(0.975, e.deltaY), ax, ay);
+    } else {
+      // Cualquier scroll sin Ctrl → pan (dos dedos trackpad en cualquier dirección)
       this._panX -= e.deltaX;
       this._panY -= e.deltaY;
       this._commitTransform();
-    } else {
-      // Scroll vertical puro → zoom (mouse wheel o trackpad vertical)
-      let delta = e.deltaY;
-      if (e.deltaMode === 1) delta *= 16;
-      if (e.deltaMode === 2) delta *= 400;
-      this._applyZoom(Math.pow(0.997, delta), ax, ay);
     }
   }
 
@@ -193,11 +189,25 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   ngOnInit(): void {
-    this.http.get<PrepData>('assets/datos-mock.json').subscribe(d => {
-      this.datos.set(d);
-      this.construirPoligonoMap(d);
-      this.cargarSvg();
-      this.initTooltipGanador(d);
+    forkJoin({
+      datos: this.http.get<PrepData>('assets/datos-mock.json'),
+      svg:   this.http.get('assets/mapa-mexico.svg', { responseType: 'text' })
+    }).subscribe(({ datos, svg }) => {
+      this.datos.set(datos);
+      this.construirPoligonoMap(datos);
+      this.initTooltipGanador(datos);
+
+      const container = this.svgContainerRef.nativeElement;
+      container.innerHTML = svg;
+      const el = container.querySelector('svg');
+      if (!el) return;
+      this.svgEl = el as SVGSVGElement;
+      this.svgEl.style.width          = '100%';
+      this.svgEl.style.display        = 'block';
+      this.svgEl.style.transformOrigin = '0 0';
+
+      this.colorear();
+      this.bindSvgEventos();
     });
   }
 
@@ -245,24 +255,6 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     }
   }
 
-  private cargarSvg(): void {
-    this.http.get('assets/mapa-mexico.svg', { responseType: 'text' }).subscribe(svgText => {
-      const container = this.svgContainerRef.nativeElement;
-      container.innerHTML = svgText;
-
-      const el = container.querySelector('svg');
-      if (!el) return;
-      this.svgEl = el as SVGSVGElement;
-
-      this.svgEl.style.width          = '100%';
-      this.svgEl.style.display        = 'block';
-      this.svgEl.style.transformOrigin = '0 0';
-
-      this.colorear();
-      this.bindSvgEventos();
-    });
-  }
-
   // ── Colorear ─────────────────────────────────────────────────────────────
   private colorear(): void {
     if (!this.svgEl || !this.datos()) return;
@@ -297,14 +289,20 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   // ── Eventos SVG ──────────────────────────────────────────────────────────
   private bindSvgEventos(): void {
     if (!this.svgEl) return;
-    this.svgEl.querySelectorAll<SVGPathElement>('path[id^="p-"]').forEach(path => {
-      path.addEventListener('mousemove', (e: MouseEvent) => {
-        if (this.isDragging()) return;
-        this.onPolyHover(e, path);
-      });
-      path.addEventListener('mouseleave', () => {
-        if (!this.isDragging()) this.onPolyLeave(path);
-      });
+    let lastHovered: SVGPathElement | null = null;
+
+    this.svgEl.addEventListener('mousemove', (e: MouseEvent) => {
+      if (this.isDragging()) return;
+      const path = (e.target as Element).closest?.('path[id^="p-"]') as SVGPathElement | null;
+      if (path === lastHovered) return;
+      if (lastHovered) this.onPolyLeave(lastHovered);
+      lastHovered = path;
+      if (path) this.onPolyHover(e, path);
+    });
+
+    this.svgEl.addEventListener('mouseleave', () => {
+      if (lastHovered) { this.onPolyLeave(lastHovered); lastHovered = null; }
+      this.tooltipVisible.set(false);
     });
   }
 
