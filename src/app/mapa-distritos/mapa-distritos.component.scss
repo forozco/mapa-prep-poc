@@ -101,25 +101,36 @@
   align-items: center;
 }
 
-// Badge de dos partes: swatch de color + código de partido
+// Swatch de color: cuadrado independiente
+.badge-swatch-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  display: block;
+}
+
+// Código de partido: caja blanca independiente
 .badge-partido {
   display: inline-flex;
-  align-items: stretch;
-  border-radius: 3px;
-  overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.18);
-  height: 22px;
+  align-items: center;
+  gap: 5px;
   flex-shrink: 0;
 
   .badge-swatch {
+    width: 10px;
+    height: 20px;
+    border-radius: 3px;
     display: block;
-    width: 14px;
     flex-shrink: 0;
   }
 
   .badge-code {
     background: white;
+    border: 1px solid rgba(0,0,0,0.18);
+    border-radius: 3px;
     padding: 0 6px;
+    height: 20px;
     font-size: 10px;
     font-weight: 700;
     color: #333;
@@ -192,10 +203,13 @@
   overflow: hidden;
 }
 
-.mapa-svg {
+.mapa-svg-container {
   width: 100%;
   display: block;
-  will-change: transform;
+
+  svg {
+    will-change: transform;
+  }
 }
 
 // ── Controles de zoom ─────────────────────────────────────────────────────────
@@ -255,6 +269,11 @@
     font-weight: 700;
     margin-bottom: 10px;
     line-height: 1.3;
+    height: 2.6em;        // espacio fijo para 2 líneas
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   .tt-badge-row {

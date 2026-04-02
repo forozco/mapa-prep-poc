@@ -60,15 +60,6 @@
         </tfoot>
       </table>
 
-      <div class="sim-bar">
-        <button class="btn-sim" [class.activo]="simActiva()" (click)="toggleSim()">
-          {{ simActiva() ? '⏹ Detener' : '▶ Simular corte' }}
-        </button>
-        <span class="sim-label">
-          <span class="live-dot"></span>
-          {{ simLabel() }}
-        </span>
-      </div>
     </div>
 
     <!-- ── Mapa ─────────────────────────────────────────────────────────── -->
@@ -77,13 +68,8 @@
       <div class="mapa-wrapper" #mapaWrapper
            (mousedown)="onDragStart($event)"
            [style.cursor]="isDragging() ? 'grabbing' : 'grab'">
-        <object
-          #mapaObj
-          type="image/svg+xml"
-          data="assets/mapa-mexico.svg"
-          class="mapa-svg"
-          style="transform-origin: 0 0;"
-        ></object>
+
+        <div #svgContainer class="mapa-svg-container"></div>
 
         <!-- Controles de zoom -->
         <div class="zoom-controls">
