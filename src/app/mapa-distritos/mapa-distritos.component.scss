@@ -199,15 +199,15 @@
 // ── Panel de info fijo arriba-derecha del mapa ─────────────────────────────────
 .prep-tooltip {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 24px;
+  right: 28px;
   background: #1a1f2e;
   border-radius: 10px;
   padding: 14px 18px;
   color: white;
   pointer-events: none;
   z-index: 10;
-  min-width: 200px;
+  width: 220px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.35);
 
   .tt-titulo {
@@ -227,7 +227,7 @@
     align-items: center;
     font-size: 13px;
     color: #aaa;
-    margin-top: 6px;
+    margin-top: 8px;
   }
 
   .tt-label { color: #aaa; }
@@ -235,7 +235,7 @@
   .tt-val {
     font-weight: 700;
     color: white;
-    font-size: 15px;
+    font-size: 17px;
   }
 
   .tt-pct { color: #e91e8c !important; }

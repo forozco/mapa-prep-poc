@@ -67,7 +67,7 @@ export class MapaDistritosComponent implements OnInit, OnDestroy {
   });
 
   // Tooltip
-  tooltipVisible = signal(false);
+  tooltipVisible = signal(true);
   tooltipData    = signal<{
     titulo: string;
     partido: Partido | null;
@@ -91,6 +91,23 @@ export class MapaDistritosComponent implements OnInit, OnDestroy {
       this.datos.set(d);
       this.construirPoligonoMap(d);
       this.esperarSvg();
+      this.initTooltipGanador(d);
+    });
+  }
+
+  private initTooltipGanador(d: PrepData): void {
+    const filas = d.partidos.map(p => ({
+      ...p,
+      numDistritos: Object.values(d.distritos).filter(x => x.partido === p.id).length
+    }));
+    const ganador = filas.reduce((a, b) => b.numDistritos > a.numDistritos ? b : a, filas[0]);
+    if (!ganador) return;
+    this.tooltipData.set({
+      titulo: ganador.labels.join(' + '),
+      partido: ganador,
+      isCI: false,
+      numDistritos: ganador.numDistritos,
+      pct: `${ganador.pctVotos.toFixed(4)}%`
     });
   }
 
@@ -212,7 +229,8 @@ export class MapaDistritosComponent implements OnInit, OnDestroy {
     path.style.fill = dist?.partido
       ? this.pastel(this.colorPartido(dist.partido))
       : '#dce8f0';
-    this.tooltipVisible.set(false);
+    const d = this.datos();
+    if (d) this.initTooltipGanador(d);
   }
 
 
