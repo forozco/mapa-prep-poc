@@ -87,7 +87,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   private _panX = 0;
   private _panY = 0;
   private readonly ZOOM_MIN = 0.5;
-  private readonly ZOOM_MAX = 4;
+  private readonly ZOOM_MAX = 10;
   private _zoomSig = signal(1);
   canZoomOut = computed(() => this._zoomSig() > 1);
   private _dragStartX    = 0;
@@ -162,6 +162,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     this._panY = ay - (ay - this._panY) * ratio;
     this._zoom = newZoom;
     this._zoomSig.set(newZoom);
+    this._clampPan();
     this._commitTransform();
   }
 
@@ -236,6 +237,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
 
       this._panX = this._dragStartPanX + me.clientX - this._dragStartX;
       this._panY = this._dragStartPanY + me.clientY - this._dragStartY;
+      this._clampPan();
       this._commitTransform();
     };
 
@@ -276,6 +278,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
       }
       this._panX += this._velX;
       this._panY += this._velY;
+      this._clampPan();
       // Escribir directo — ya estamos dentro de rAF
       if (this.svgEl)
         this.svgEl.style.transform =
@@ -293,13 +296,57 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
   ngAfterViewInit(): void {
-    // Register wheel listener with passive:false on the wrapper so we can
-    // call preventDefault() and prevent page scroll while over the map.
-    this.mapaWrapperRef.nativeElement.addEventListener(
-      'wheel',
-      (e: WheelEvent) => this.onWheelZoom(e),
-      { passive: false }
-    );
+    const wrapper = this.mapaWrapperRef.nativeElement;
+
+    wrapper.addEventListener('wheel', (e: WheelEvent) => this.onWheelZoom(e), { passive: false });
+
+    // ── Touch: pan con un dedo, pinch zoom con dos ────────────────────────
+    let lastDist = 0, lastMidX = 0, lastMidY = 0;
+    let t0PanX = 0, t0PanY = 0, t0X = 0, t0Y = 0;
+
+    wrapper.addEventListener('touchstart', (e: TouchEvent) => {
+      e.preventDefault();
+      this._cancelMomentum();
+      this._setTransition('none');
+      if (e.touches.length === 1) {
+        t0X = e.touches[0].clientX;  t0Y = e.touches[0].clientY;
+        t0PanX = this._panX;          t0PanY = this._panY;
+      } else if (e.touches.length === 2) {
+        const dx = e.touches[1].clientX - e.touches[0].clientX;
+        const dy = e.touches[1].clientY - e.touches[0].clientY;
+        lastDist = Math.hypot(dx, dy);
+        lastMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        lastMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        t0PanX = this._panX;  t0PanY = this._panY;
+      }
+    }, { passive: false });
+
+    wrapper.addEventListener('touchmove', (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        this._panX = t0PanX + e.touches[0].clientX - t0X;
+        this._panY = t0PanY + e.touches[0].clientY - t0Y;
+        this._clampPan();
+        this._commitTransform();
+      } else if (e.touches.length === 2) {
+        const dx   = e.touches[1].clientX - e.touches[0].clientX;
+        const dy   = e.touches[1].clientY - e.touches[0].clientY;
+        const dist = Math.hypot(dx, dy);
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        if (lastDist > 0) {
+          const r = this.svgContainerRef.nativeElement.getBoundingClientRect();
+          this._applyZoom(dist / lastDist, midX - r.left, midY - r.top);
+        }
+        this._panX += midX - lastMidX;
+        this._panY += midY - lastMidY;
+        this._clampPan();
+        this._commitTransform();
+        lastDist = dist;  lastMidX = midX;  lastMidY = midY;
+      }
+    }, { passive: false });
+
+    wrapper.addEventListener('touchend', () => { lastDist = 0; }, { passive: true });
   }
 
   ngOnInit(): void {
@@ -316,9 +363,10 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
       const el = container.querySelector('svg');
       if (!el) return;
       this.svgEl = el as SVGSVGElement;
-      this.svgEl.style.width          = '100%';
-      this.svgEl.style.display        = 'block';
-      this.svgEl.style.transformOrigin = '0 0';
+      this.svgEl.style.width           = '100%';
+      this.svgEl.style.display         = 'block';
+      this.svgEl.style.transformOrigin  = '0 0';
+      this.svgEl.style.shapeRendering  = 'geometricPrecision';
 
       this.colorear();
       this.bindSvgEventos();
@@ -375,15 +423,12 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     if (!this.svgEl || !this.datos()) return;
     this.svgEl.querySelectorAll<SVGPathElement>('path[id^="p-"]').forEach(path => {
       const dist = this.poligonoMap[path.id];
-      if (!dist?.partido) {
-        path.style.fill        = '#dce8f0';
-        path.style.stroke      = '#888';
-        path.style.strokeWidth = '1.2';
-      } else {
-        path.style.fill        = this.pastel(this.colorPartido(dist.partido));
-        path.style.stroke      = '#888';
-        path.style.strokeWidth = '1.2';
-      }
+      path.style.fill        = dist?.partido ? this.pastel(this.colorPartido(dist.partido)) : '#dce8f0';
+      path.style.stroke       = '#777';
+      path.style.strokeWidth  = '0.6';
+      path.style.vectorEffect = 'non-scaling-stroke';
+      path.style.transition   = 'fill 0.15s ease';
+      path.style.cursor       = 'pointer';
       (path as any)._clave = dist?.clave ?? '';
     });
   }
@@ -419,6 +464,28 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
       if (lastHovered) { this.onPolyLeave(lastHovered); lastHovered = null; }
       this.tooltipVisible.set(false);
     });
+
+    // Doble click → zoom x2 centrado en el cursor
+    this.svgEl.addEventListener('dblclick', (e: MouseEvent) => {
+      e.preventDefault();
+      this._cancelMomentum();
+      this._setTransition('300ms');
+      this._applyZoom(2, ...this._cursorAnchor(e));
+    });
+  }
+
+  // ── Pan clamping ─────────────────────────────────────────────────────────
+  private _clampPan(): void {
+    const wrap = this.mapaWrapperRef?.nativeElement;
+    const cont = this.svgContainerRef?.nativeElement;
+    if (!wrap || !cont) return;
+    const W  = wrap.clientWidth;
+    const H  = wrap.clientHeight;
+    const sW = cont.clientWidth  * this._zoom;
+    const sH = cont.clientHeight * this._zoom;
+    const m  = 80; // mínimo de píxeles visibles
+    this._panX = Math.min(W - m, Math.max(m - sW, this._panX));
+    this._panY = Math.min(H - m, Math.max(m - sH, this._panY));
   }
 
   private onPolyHover(_e: MouseEvent, path: SVGPathElement): void {
@@ -428,7 +495,10 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     const dist = d.distritos[clave];
     if (!dist) return;
 
-    path.style.fill = this.colorPartido(dist.partido ?? '');
+    // Traer al frente para que sus bordes no queden tapados por distritos vecinos
+    path.parentNode?.appendChild(path);
+    path.style.fill   = this.colorPartido(dist.partido ?? '');
+    path.style.filter = 'drop-shadow(0 0 4px rgba(0,0,0,0.55))';
 
     const partido  = d.partidos.find(p => p.id === dist.partido) ?? null;
     const isCI     = dist.partido === 'CI';
@@ -451,9 +521,8 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   private onPolyLeave(path: SVGPathElement): void {
     const clave = (path as any)._clave as string;
     const dist  = clave ? this.datos()?.distritos[clave] : null;
-    path.style.fill = dist?.partido
-      ? this.pastel(this.colorPartido(dist.partido))
-      : '#dce8f0';
+    path.style.fill   = dist?.partido ? this.pastel(this.colorPartido(dist.partido)) : '#dce8f0';
+    path.style.filter = '';
     this.tooltipVisible.set(false);
   }
 
