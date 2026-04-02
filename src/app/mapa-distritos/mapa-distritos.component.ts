@@ -82,7 +82,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
 
   // Zoom y pan — variables nativas para evitar change detection en cada frame
   isDragging  = signal(false);
-  private _trackpadUntil = 0;   // timestamp hasta el que consideramos que el input es trackpad
+  private _trackpadUntil = 0;   // timestamp hasta el que el scroll sin ctrlKey es trackpad pan
   private _zoom = 1;
   private _panX = 0;
   private _panY = 0;
@@ -151,39 +151,43 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     e.preventDefault();
 
     if (e.ctrlKey) {
-      // Pinch gesture (Mac trackpad) o Ctrl+scroll (mouse) → zoom centrado en cursor
-      const svgRect = this.svgEl?.getBoundingClientRect();
-      const ax = svgRect ? e.clientX - svgRect.left : e.clientX;
-      const ay = svgRect ? e.clientY - svgRect.top  : e.clientY;
-      this._applyZoom(Math.pow(0.975, e.deltaY), ax, ay);
+      // Pinch (Mac trackpad) → zoom suave per-evento, centrado en cursor
+      this._applyZoom(Math.pow(0.99, e.deltaY), ...this._cursorAnchor(e));
       return;
     }
 
-    // deltaX != 0 solo puede venir del trackpad → pan inmediato y extender ventana
     if (Math.abs(e.deltaX) > 0) {
-      this._trackpadUntil = Date.now() + 200;
+      // Componente horizontal → solo puede ser trackpad → pan y renovar ventana
+      this._trackpadUntil = Date.now() + 300;
       this._panX -= e.deltaX;
       this._panY -= e.deltaY;
       this._commitTransform();
       return;
     }
 
-    // deltaX === 0: si estamos dentro de la ventana trackpad → pan vertical
+    // deltaX === 0: dentro de ventana trackpad → seguir paneando vertical
     if (Date.now() < this._trackpadUntil) {
       this._panY -= e.deltaY;
       this._commitTransform();
       return;
     }
 
-    // Sin contexto trackpad → mouse wheel → zoom centrado en cursor
-    let delta = e.deltaY;
-    if (e.deltaMode === 1) delta *= 16;
-    if (e.deltaMode === 2) delta *= 400;
-    const svgRect = this.svgEl?.getBoundingClientRect();
-    const ax = svgRect ? e.clientX - svgRect.left : e.clientX;
-    const ay = svgRect ? e.clientY - svgRect.top  : e.clientY;
-    this._applyZoom(Math.pow(0.997, delta), ax, ay);
+    // Fuera de ventana → mouse wheel → zoom centrado en cursor
+    let dy = e.deltaY;
+    if (e.deltaMode === 1) dy *= 16;
+    if (e.deltaMode === 2) dy *= 400;
+    this._applyZoom(Math.pow(0.992, dy), ...this._cursorAnchor(e));
   }
+
+  /**
+   * Calcula el anchor del cursor en el espacio del contenedor SVG (sin transform).
+   * Usar el div contenedor —no el SVG— porque el SVG ya tiene el transform aplicado.
+   */
+  private _cursorAnchor(e: MouseEvent): [number, number] {
+    const r = this.svgContainerRef.nativeElement.getBoundingClientRect();
+    return [e.clientX - r.left, e.clientY - r.top];
+  }
+
 
   onDragStart(e: MouseEvent): void {
     if (e.button !== 0) return;
