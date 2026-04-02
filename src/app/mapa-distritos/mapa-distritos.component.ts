@@ -82,7 +82,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
 
   // Zoom y pan — variables nativas para evitar change detection en cada frame
   isDragging  = signal(false);
-  private _trackpadUntil = 0;   // timestamp hasta el que el scroll sin ctrlKey es trackpad pan
+  private _trackpadUntil = 0;
   private _zoom = 1;
   private _panX = 0;
   private _panY = 0;
@@ -96,6 +96,14 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   private _dragStartPanY = 0;
   private _rafId?: number;
 
+  // Inercia de arrastre
+  private _velX         = 0;
+  private _velY         = 0;
+  private _prevDragX    = 0;
+  private _prevDragY    = 0;
+  private _prevDragT    = 0;
+  private _momentumRaf?: number;
+
   // Inline SVG element reference
   private svgEl: SVGSVGElement | null = null;
 
@@ -104,9 +112,14 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   // ── Zoom helpers ─────────────────────────────────────────────────────────
   zoomIn():    void { this._zoomButton(1.2); }
   zoomOut():   void { this._zoomButton(1 / 1.2); }
-  zoomReset(): void { this._zoom = 1; this._panX = 0; this._panY = 0; this._zoomSig.set(1); this._commitTransform(); }
+  zoomReset(): void {
+    this._cancelMomentum();
+    this._zoom = 1; this._panX = 0; this._panY = 0; this._zoomSig.set(1);
+    this._setTransition('250ms');
+    this._commitTransform();
+  }
 
-  /** Zoom centrado en el centro visual del wrapper, sin depender de svgRect */
+  /** Zoom centrado en el centro visual del wrapper */
   private _zoomButton(factor: number): void {
     const wrap = this.mapaWrapperRef?.nativeElement;
     if (!wrap) return;
@@ -119,29 +132,34 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     this._panY = cy - (cy - this._panY) * ratio;
     this._zoom = newZoom;
     this._zoomSig.set(newZoom);
+    this._setTransition('200ms');
     this._commitTransform();
   }
 
-  /** Aplica el transform al SVG inline en el próximo animation frame (evita jitter) */
+  /** Activa/desactiva la transición CSS del SVG */
+  private _setTransition(duration: string): void {
+    if (this.svgEl)
+      this.svgEl.style.transition = duration === 'none' ? 'none'
+        : `transform ${duration} cubic-bezier(0.25,0.46,0.45,0.94)`;
+  }
+
+  /** Aplica el transform en el próximo animation frame */
   private _commitTransform(): void {
     if (this._rafId !== undefined) return;
     this._rafId = requestAnimationFrame(() => {
       this._rafId = undefined;
-      if (this.svgEl) {
+      if (this.svgEl)
         this.svgEl.style.transform =
           `translate(${this._panX}px,${this._panY}px) scale(${this._zoom})`;
-      }
     });
   }
 
-  private _applyZoom(factor: number, ax: number | null, ay: number | null): void {
+  private _applyZoom(factor: number, ax: number, ay: number): void {
     const newZoom = Math.min(Math.max(this._zoom * factor, this.ZOOM_MIN), this.ZOOM_MAX);
     if (newZoom === this._zoom) return;
-    if (ax !== null && ay !== null) {
-      const ratio = newZoom / this._zoom;
-      this._panX = ax - (ax - this._panX) * ratio;
-      this._panY = ay - (ay - this._panY) * ratio;
-    }
+    const ratio = newZoom / this._zoom;
+    this._panX = ax - (ax - this._panX) * ratio;
+    this._panY = ay - (ay - this._panY) * ratio;
     this._zoom = newZoom;
     this._zoomSig.set(newZoom);
     this._commitTransform();
@@ -149,55 +167,73 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
 
   onWheelZoom(e: WheelEvent): void {
     e.preventDefault();
+    this._cancelMomentum();
 
     if (e.ctrlKey) {
-      // Pinch (Mac trackpad) → zoom suave per-evento, centrado en cursor
+      // Pinch → respuesta inmediata, sin transición
+      this._setTransition('none');
       this._applyZoom(Math.pow(0.99, e.deltaY), ...this._cursorAnchor(e));
       return;
     }
 
     if (Math.abs(e.deltaX) > 0) {
-      // Componente horizontal → solo puede ser trackpad → pan y renovar ventana
+      // Trackpad horizontal → pan directo
       this._trackpadUntil = Date.now() + 300;
+      this._setTransition('none');
       this._panX -= e.deltaX;
       this._panY -= e.deltaY;
       this._commitTransform();
       return;
     }
 
-    // deltaX === 0: dentro de ventana trackpad → seguir paneando vertical
     if (Date.now() < this._trackpadUntil) {
+      // Continuación de gesto trackpad → pan vertical directo
       this._panY -= e.deltaY;
       this._commitTransform();
       return;
     }
 
-    // Fuera de ventana → mouse wheel → zoom centrado en cursor
+    // Mouse wheel → zoom suave con transición
     let dy = e.deltaY;
     if (e.deltaMode === 1) dy *= 16;
     if (e.deltaMode === 2) dy *= 400;
+    this._setTransition('120ms');
     this._applyZoom(Math.pow(0.992, dy), ...this._cursorAnchor(e));
   }
 
-  /**
-   * Calcula el anchor del cursor en el espacio del contenedor SVG (sin transform).
-   * Usar el div contenedor —no el SVG— porque el SVG ya tiene el transform aplicado.
-   */
+  /** Anchor del cursor en el espacio del contenedor (el div no se transforma) */
   private _cursorAnchor(e: MouseEvent): [number, number] {
     const r = this.svgContainerRef.nativeElement.getBoundingClientRect();
     return [e.clientX - r.left, e.clientY - r.top];
   }
 
-
   onDragStart(e: MouseEvent): void {
     if (e.button !== 0) return;
+    this._cancelMomentum();
+    this._setTransition('none');
+
     this._dragStartX    = e.clientX;
     this._dragStartY    = e.clientY;
     this._dragStartPanX = this._panX;
     this._dragStartPanY = this._panY;
+    this._velX = 0; this._velY = 0;
+    this._prevDragX = e.clientX;
+    this._prevDragY = e.clientY;
+    this._prevDragT = performance.now();
     this.isDragging.set(true);
 
     const onMove = (me: MouseEvent) => {
+      const now = performance.now();
+      const dt  = now - this._prevDragT;
+      if (dt > 0 && dt < 80) {
+        const alpha = 0.5;   // suavizado exponencial de velocidad
+        this._velX = alpha * (me.clientX - this._prevDragX) / dt * 16 + (1 - alpha) * this._velX;
+        this._velY = alpha * (me.clientY - this._prevDragY) / dt * 16 + (1 - alpha) * this._velY;
+      }
+      this._prevDragX = me.clientX;
+      this._prevDragY = me.clientY;
+      this._prevDragT = now;
+
       this._panX = this._dragStartPanX + me.clientX - this._dragStartX;
       this._panY = this._dragStartPanY + me.clientY - this._dragStartY;
       this._commitTransform();
@@ -207,10 +243,46 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
       this.isDragging.set(false);
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup',   onUp);
+      this._applyMomentum();
     };
 
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup',   onUp);
+  }
+
+  // ── Inercia de arrastre ───────────────────────────────────────────────────
+  private _cancelMomentum(): void {
+    if (this._momentumRaf !== undefined) {
+      cancelAnimationFrame(this._momentumRaf);
+      this._momentumRaf = undefined;
+    }
+  }
+
+  private _applyMomentum(): void {
+    this._cancelMomentum();
+    const speed = Math.hypot(this._velX, this._velY);
+    if (speed < 0.5) return;   // demasiado lento, ignorar
+
+    const decay   = 0.91;
+    const minSpd  = 0.12;
+
+    const tick = () => {
+      this._velX *= decay;
+      this._velY *= decay;
+      if (Math.hypot(this._velX, this._velY) < minSpd) {
+        this._momentumRaf = undefined;
+        this._setTransition('120ms');   // restaurar transición para zoom posterior
+        return;
+      }
+      this._panX += this._velX;
+      this._panY += this._velY;
+      // Escribir directo — ya estamos dentro de rAF
+      if (this.svgEl)
+        this.svgEl.style.transform =
+          `translate(${this._panX}px,${this._panY}px) scale(${this._zoom})`;
+      this._momentumRaf = requestAnimationFrame(tick);
+    };
+    this._momentumRaf = requestAnimationFrame(tick);
   }
 
   // Simulación
@@ -272,6 +344,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngOnDestroy(): void {
     this.detenerSim();
+    this._cancelMomentum();
   }
 
   // ── Tabla ────────────────────────────────────────────────────────────────
