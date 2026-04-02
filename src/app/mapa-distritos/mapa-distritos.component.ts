@@ -69,9 +69,10 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   });
 
   // Tooltip
-  tooltipVisible = signal(true);
+  tooltipVisible = signal(false);
   tooltipData    = signal<{
     titulo: string;
+    entidad: string;
     partido: Partido | null;
     isCI: boolean;
     numDistritos: number;
@@ -208,11 +209,12 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     const ganador = filas.reduce((a, b) => b.numDistritos > a.numDistritos ? b : a, filas[0]);
     if (!ganador) return;
     this.tooltipData.set({
-      titulo: ganador.labels.join(' + '),
-      partido: ganador,
-      isCI: false,
+      titulo:      'Nacional',
+      entidad:     '',
+      partido:     ganador,
+      isCI:        false,
       numDistritos: ganador.numDistritos,
-      pct: `${ganador.pctVotos.toFixed(4)}%`
+      pct:         `${ganador.pctVotos.toFixed(4)}%`
     });
   }
 
@@ -268,12 +270,12 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
       const dist = this.poligonoMap[path.id];
       if (!dist?.partido) {
         path.style.fill        = '#dce8f0';
-        path.style.stroke      = '#fff';
-        path.style.strokeWidth = '0.4';
+        path.style.stroke      = '#888';
+        path.style.strokeWidth = '1.2';
       } else {
         path.style.fill        = this.pastel(this.colorPartido(dist.partido));
-        path.style.stroke      = '#fff';
-        path.style.strokeWidth = '0.4';
+        path.style.stroke      = '#888';
+        path.style.strokeWidth = '1.2';
       }
       (path as any)._clave = dist?.clave ?? '';
     });
@@ -323,7 +325,8 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     const pct      = partido ? partido.pctVotos.toFixed(4) : ((count / 300) * 100).toFixed(4);
 
     this.tooltipData.set({
-      titulo:      `Distrito ${String(dist.numeroDistrito).padStart(2, '0')}. ${dist.estado}`,
+      titulo:      dist.estado,
+      entidad:     `Distrito ${String(dist.numeroDistrito).padStart(2, '0')}. ${dist.cabecera}`,
       partido,
       isCI,
       numDistritos: count,
@@ -338,8 +341,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     path.style.fill = dist?.partido
       ? this.pastel(this.colorPartido(dist.partido))
       : '#dce8f0';
-    const d = this.datos();
-    if (d) this.initTooltipGanador(d);
+    this.tooltipVisible.set(false);
   }
 
   // ── Simulación ────────────────────────────────────────────────────────────

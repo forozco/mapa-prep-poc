@@ -81,6 +81,9 @@
         @if (tooltipVisible() && tooltipData(); as tt) {
           <div class="prep-tooltip">
             <div class="tt-titulo">{{ tt.titulo }}</div>
+            @if (tt.entidad) {
+              <div class="tt-entidad">{{ tt.entidad }}</div>
+            }
             <div class="tt-badge-row">
               @if (tt.partido) {
                 <div class="badges">
