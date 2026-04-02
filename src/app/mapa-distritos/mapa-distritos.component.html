@@ -1,0 +1,120 @@
+<div class="mapa-page">
+
+  <h5 class="mapa-titulo">Distritos obtenidos</h5>
+  <p class="mapa-subtitulo">
+    A continuación, te mostramos los resultados preliminares a <strong>Nivel Nacional</strong>
+    con base en las actas PREP capturadas hasta el momento.<br>
+    Puedes ver resaltado el Partido Político, Coalición o Candidaturas Independientes
+    que lleva ventaja hasta el momento con mayor número de Distritos obtenidos.
+  </p>
+
+  <div class="contenido">
+
+    <!-- ── Tabla ────────────────────────────────────────────────────────── -->
+    <div class="tabla-col">
+      <table class="tabla-partidos">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Distritos</th>
+            <th>Porcentaje</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (fila of filasTabla(); track fila.id) {
+            <tr [class.fila-ganador]="fila.id === ganadorId()">
+              <td>
+                <div class="badges">
+                  @for (lbl of fila.labels; track lbl; let i = $index) {
+                    <span class="badge-partido">
+                      <i class="badge-swatch" [style.background]="fila.colores[i]"></i>
+                      <span class="badge-code">{{ lbl }}</span>
+                    </span>
+                  }
+                </div>
+              </td>
+              <td class="col-num">{{ fila.numDistritos }}</td>
+              <td class="col-pct">{{ fila.pctVotos.toFixed(4) }}%</td>
+            </tr>
+          }
+          <!-- CI siempre al final -->
+          <tr>
+            <td>
+              <div class="badges">
+                <span class="badge-partido">
+                  <i class="badge-swatch" style="background:#cccccc"></i>
+                  <span class="badge-code">CI</span>
+                </span>
+              </div>
+            </td>
+            <td class="col-num">{{ ciDistritos() }}</td>
+            <td class="col-pct">{{ ((ciDistritos() / 300) * 100).toFixed(4) }}%</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="fila-total">
+            <td>Total</td>
+            <td class="col-num">300</td>
+            <td class="col-pct">100.00%</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="sim-bar">
+        <button class="btn-sim" [class.activo]="simActiva()" (click)="toggleSim()">
+          {{ simActiva() ? '⏹ Detener' : '▶ Simular corte' }}
+        </button>
+        <span class="sim-label">
+          <span class="live-dot"></span>
+          {{ simLabel() }}
+        </span>
+      </div>
+    </div>
+
+    <!-- ── Mapa ─────────────────────────────────────────────────────────── -->
+    <div class="mapa-col">
+      <p class="mapa-subtitulo fw-600 mb-2">Mapa de Distritos Electorales</p>
+      <div class="mapa-wrapper">
+        <object
+          #mapaObj
+          type="image/svg+xml"
+          data="assets/mapa-mexico.svg"
+          class="mapa-svg"
+        ></object>
+
+        @if (tooltipVisible() && tooltipData(); as tt) {
+          <div class="prep-tooltip">
+            <div class="tt-titulo">{{ tt.titulo }}</div>
+            <div class="tt-badge-row">
+              @if (tt.partido) {
+                <div class="badges">
+                  @for (lbl of tt.partido.labels; track lbl; let i = $index) {
+                    <span class="badge-partido badge-dark">
+                      <i class="badge-swatch" [style.background]="tt.partido.colores[i]"></i>
+                      <span class="badge-code">{{ lbl }}</span>
+                    </span>
+                  }
+                </div>
+              }
+              @if (tt.isCI) {
+                <span class="badge-partido badge-dark">
+                  <i class="badge-swatch" style="background:#cccccc"></i>
+                  <span class="badge-code">CI</span>
+                </span>
+              }
+            </div>
+            <div class="tt-row">
+              <span class="tt-label">Distritos</span>
+              <span class="tt-val">{{ tt.numDistritos }}</span>
+            </div>
+            <div class="tt-row">
+              <span class="tt-label">Porcentaje</span>
+              <span class="tt-val tt-pct">{{ tt.pct }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+</div>

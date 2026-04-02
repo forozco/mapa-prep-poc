@@ -1,15 +1,11 @@
 import { Component } from '@angular/core';
+import { MapaDistritosComponent } from './mapa-distritos/mapa-distritos.component';
 
 @Component({
   selector: 'app-root',
-  imports: [],
-  template: `
-    <h1>Welcome to {{title}}!</h1>
-
-    
-  `,
-  styles: [],
+  standalone: true,
+  imports: [MapaDistritosComponent],
+  template: `<app-mapa-distritos />`,
+  styles: []
 })
-export class AppComponent {
-  title = 'mapa-prep-poc';
-}
+export class AppComponent {}
