@@ -82,6 +82,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
 
   // Zoom y pan — variables nativas para evitar change detection en cada frame
   isDragging  = signal(false);
+  private _trackpadUntil = 0;   // timestamp hasta el que consideramos que el input es trackpad
   private _zoom = 1;
   private _panX = 0;
   private _panY = 0;
@@ -101,9 +102,25 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   private poligonoMap: Record<string, Distrito> = {};
 
   // ── Zoom helpers ─────────────────────────────────────────────────────────
-  zoomIn():    void { this._applyZoom(1.2, null, null); }
-  zoomOut():   void { this._applyZoom(1 / 1.2, null, null); }
+  zoomIn():    void { this._zoomButton(1.2); }
+  zoomOut():   void { this._zoomButton(1 / 1.2); }
   zoomReset(): void { this._zoom = 1; this._panX = 0; this._panY = 0; this._zoomSig.set(1); this._commitTransform(); }
+
+  /** Zoom centrado en el centro visual del wrapper, sin depender de svgRect */
+  private _zoomButton(factor: number): void {
+    const wrap = this.mapaWrapperRef?.nativeElement;
+    if (!wrap) return;
+    const newZoom = Math.min(Math.max(this._zoom * factor, this.ZOOM_MIN), this.ZOOM_MAX);
+    if (newZoom === this._zoom) return;
+    const ratio = newZoom / this._zoom;
+    const cx = wrap.clientWidth  / 2;
+    const cy = wrap.clientHeight / 2;
+    this._panX = cx - (cx - this._panX) * ratio;
+    this._panY = cy - (cy - this._panY) * ratio;
+    this._zoom = newZoom;
+    this._zoomSig.set(newZoom);
+    this._commitTransform();
+  }
 
   /** Aplica el transform al SVG inline en el próximo animation frame (evita jitter) */
   private _commitTransform(): void {
@@ -139,12 +156,33 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
       const ax = svgRect ? e.clientX - svgRect.left : e.clientX;
       const ay = svgRect ? e.clientY - svgRect.top  : e.clientY;
       this._applyZoom(Math.pow(0.975, e.deltaY), ax, ay);
-    } else {
-      // Cualquier scroll sin Ctrl → pan (dos dedos trackpad en cualquier dirección)
+      return;
+    }
+
+    // deltaX != 0 solo puede venir del trackpad → pan inmediato y extender ventana
+    if (Math.abs(e.deltaX) > 0) {
+      this._trackpadUntil = Date.now() + 200;
       this._panX -= e.deltaX;
       this._panY -= e.deltaY;
       this._commitTransform();
+      return;
     }
+
+    // deltaX === 0: si estamos dentro de la ventana trackpad → pan vertical
+    if (Date.now() < this._trackpadUntil) {
+      this._panY -= e.deltaY;
+      this._commitTransform();
+      return;
+    }
+
+    // Sin contexto trackpad → mouse wheel → zoom centrado en cursor
+    let delta = e.deltaY;
+    if (e.deltaMode === 1) delta *= 16;
+    if (e.deltaMode === 2) delta *= 400;
+    const svgRect = this.svgEl?.getBoundingClientRect();
+    const ax = svgRect ? e.clientX - svgRect.left : e.clientX;
+    const ay = svgRect ? e.clientY - svgRect.top  : e.clientY;
+    this._applyZoom(Math.pow(0.997, delta), ax, ay);
   }
 
   onDragStart(e: MouseEvent): void {
