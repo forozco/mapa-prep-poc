@@ -73,7 +73,7 @@
 
         <!-- Controles de zoom -->
         <div class="zoom-controls">
-          <button class="zoom-btn" (click)="zoomIn()"  title="Acercar">+</button>
+          <button class="zoom-btn" (click)="zoomIn()" [disabled]="!canZoomIn()" title="Acercar">+</button>
           <button class="zoom-btn" (click)="zoomOut()" [disabled]="!canZoomOut()" title="Alejar">−</button>
           <button class="zoom-btn zoom-reset" (click)="zoomReset()" title="Restaurar vista">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">

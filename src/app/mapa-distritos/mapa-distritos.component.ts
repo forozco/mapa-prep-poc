@@ -87,9 +87,10 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   private _panX = 0;
   private _panY = 0;
   private readonly ZOOM_MIN = 0.5;
-  private readonly ZOOM_MAX = 10;
+  private readonly ZOOM_MAX = 40;
   private _zoomSig = signal(1);
   canZoomOut = computed(() => this._zoomSig() > 1);
+  canZoomIn  = computed(() => this._zoomSig() < this.ZOOM_MAX);
   private _dragStartX    = 0;
   private _dragStartY    = 0;
   private _dragStartPanX = 0;
