@@ -20,9 +20,10 @@ export class GraficasActasComponent implements OnInit {
   private readonly _animated = signal(false);
 
   // Señales para los valores animados (count-up)
-  readonly animPct          = signal(0);
-  readonly animAprobada     = signal(0);
+  readonly animPct           = signal(0);
+  readonly animAprobada      = signal(0);
   readonly animContabilizada = signal(0);
+  readonly animPctR          = signal(0); // ring derecho siempre va a 100%
 
   @Input() datos: DatosCobertura = {
     listaNominalAprobada:      349_230,
@@ -35,7 +36,6 @@ export class GraficasActasComponent implements OnInit {
   private readonly R       = 82;
   private readonly SW      = 40;
   private readonly R_INNER = 62;
-  private readonly GAP     = 55;
 
   readonly CX = 170;
   readonly CY = 155;
@@ -46,9 +46,10 @@ export class GraficasActasComponent implements OnInit {
 
     setTimeout(() => {
       this._animated.set(true);
-      this.countUp(0, this.pct,                          DURATION, v => this.animPct.set(v));
-      this.countUp(0, this.datos.listaNominalAprobada,   DURATION, v => this.animAprobada.set(v));
+      this.countUp(0, this.pct,                             DURATION, v => this.animPct.set(v));
+      this.countUp(0, this.datos.listaNominalAprobada,      DURATION, v => this.animAprobada.set(v));
       this.countUp(0, this.datos.listaNominalContabilizada, DURATION, v => this.animContabilizada.set(v));
+      this.countUp(0, 100,                                  DURATION, v => this.animPctR.set(v));
     }, 50);
   }
 
@@ -70,25 +71,34 @@ export class GraficasActasComponent implements OnInit {
   }
 
   // Formatos para la plantilla usando los valores animados
-  get animPctStr():            string { return this.animPct().toFixed(4) + '%'; }
-  get animPctInnerStr():       string { return (this.animPct() / this.pct * 100).toFixed(4) + '%'; }
-  get animAprobadaStr():       string { return this.fmt(Math.round(this.animAprobada())); }
-  get animContabilizadaStr():  string { return this.fmt(Math.round(this.animContabilizada())); }
+  get animPctStr():           string { return this.animPct().toFixed(4) + '%'; }
+  get animPctInnerStr():      string { return (this.animPct() / this.pct * 100).toFixed(4) + '%'; }
+  get animAprobadaStr():      string { return this.fmt(Math.round(this.animAprobada())); }
+  get animContabilizadaStr(): string { return this.fmt(Math.round(this.animContabilizada())); }
+  get animPctRStr():          string { return this.animPctR().toFixed(4) + '%'; }
 
   /** Parámetros SVG para el donut */
-  ring(gapCenterDeg: number) {
-    const circ   = 2 * Math.PI * this.R;
-    const arcDeg = 360 - this.GAP;
-    const arcLen = circ * arcDeg / 360;
-    const fill   = arcLen * this.pct / 100;
-    const rot    = gapCenterDeg + this.GAP / 2;
+  ring(gapCenterDeg: number, pct = this.pct) {
+    const circ       = 2 * Math.PI * this.R;
+    const pctClamped = Math.min(Math.max(pct, 0), 100);
+    const gap        = Math.max(360 * (1 - pctClamped / 100), 4); // hueco = % faltante
+    const arcLen     = circ * (360 - gap) / 360;
+    const fill       = arcLen;
+    const rot        = gapCenterDeg + gap / 2;
     const fgDash = this._animated() ? `${fill} ${circ}` : `0 ${circ}`;
-    return { r: this.R, sw: this.SW, arcLen, fill, rot, circ,
-             bgDash: `${arcLen} ${circ}`, fgDash };
+
+    // Punto en el borde del círculo rosa en la dirección del hueco → la línea pasa por el gap
+    const gapRad = gapCenterDeg * Math.PI / 180;
+    const innerX = Math.round(this.CX + this.R_INNER * Math.cos(gapRad));
+    const innerY = Math.round(this.CY + this.R_INNER * Math.sin(gapRad));
+
+    return { r: this.R, sw: this.SW, arcLen, fill, rot, circ, fgDash, innerX, innerY };
   }
 
+  // izquierdo: % contabilizadas vs aprobadas (94.67%)
   get ringL() { return this.ring(300); }
-  get ringR() { return this.ring(240); }
+  // derecho: la aprobada ES el 100% de referencia → anillo lleno
+  get ringR() { return this.ring(240, 100); }
 
   fmt(n: number): string { return n.toLocaleString('es-MX'); }
 }

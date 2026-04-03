@@ -22,8 +22,8 @@
       <!-- Porcentaje centrado en la franja morada inferior (entre rosa y anillo) -->
       <text [attr.x]="CX" [attr.y]="CY + 82" class="txt-ring-pct">{{ animPctStr }}</text>
 
-      <!-- ── Callout superior: sube vertical → gira 90° derecha ── -->
-      <polyline points="170,93 170,47 248,47" class="callout-line"/>
+      <!-- ── Callout: desde el borde del círculo rosa hacia el texto ── -->
+      <polyline [attr.points]="'248,47 ' + ringL.innerX + ',47 ' + ringL.innerX + ',' + ringL.innerY" class="callout-line"/>
       <text x="252" y="40" class="txt-val-pink">{{ animAprobadaStr }}</text>
       <text x="252" y="55" class="txt-label-bold">{{ datos.etiquetaAprobada }}</text>
 
