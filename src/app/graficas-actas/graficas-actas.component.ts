@@ -49,7 +49,7 @@ export class GraficasActasComponent implements OnInit {
       this.countUp(0, this.pct,                             DURATION, v => this.animPct.set(v));
       this.countUp(0, this.datos.listaNominalAprobada,      DURATION, v => this.animAprobada.set(v));
       this.countUp(0, this.datos.listaNominalContabilizada, DURATION, v => this.animContabilizada.set(v));
-      this.countUp(0, 100,                                  DURATION, v => this.animPctR.set(v));
+      this.countUp(0, this.pct,                             DURATION, v => this.animPctR.set(v));
     }, 50);
   }
 
@@ -104,7 +104,7 @@ export class GraficasActasComponent implements OnInit {
   // izquierdo: % contabilizadas vs aprobadas (94.67%)
   get ringL() { return this.ring(300); }
   // derecho: la aprobada ES el 100% de referencia → anillo lleno
-  get ringR() { return this.ring(240, 100); }
+  get ringR() { return this.ring(240, this.pct); }
 
   fmt(n: number): string { return n.toLocaleString('es-MX'); }
 }
