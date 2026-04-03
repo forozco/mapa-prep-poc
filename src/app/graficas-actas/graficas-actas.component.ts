@@ -1,4 +1,4 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy, OnInit, signal } from '@angular/core';
 
 export interface DatosCobertura {
   listaNominalAprobada:      number;
@@ -15,7 +15,9 @@ export interface DatosCobertura {
   templateUrl: './graficas-actas.component.html',
   styleUrl:    './graficas-actas.component.scss'
 })
-export class GraficasActasComponent {
+export class GraficasActasComponent implements OnInit {
+
+  private readonly _animated = signal(false);
 
   @Input() datos: DatosCobertura = {
     listaNominalAprobada:      349_230,
@@ -36,6 +38,10 @@ export class GraficasActasComponent {
   readonly CY = 155;
   readonly rInner = this.R_INNER;
 
+  ngOnInit() {
+    setTimeout(() => this._animated.set(true), 50);
+  }
+
   get pct(): number {
     const { listaNominalAprobada: a, listaNominalContabilizada: c } = this.datos;
     return a > 0 ? (c / a) * 100 : 0;
@@ -53,8 +59,9 @@ export class GraficasActasComponent {
     // Con gap centrado en ángulo θ (en CW from 3-o'clock), la primera punta del arco
     // está en θ + gap/2. El stroke empieza en 0°, así que rotamos (θ + gap/2).
     const rot = gapCenterDeg + this.GAP / 2;
+    const fgDash = this._animated() ? `${fill} ${circ}` : `0 ${circ}`;
     return { r: this.R, sw: this.SW, arcLen, fill, rot, circ,
-             bgDash: `${arcLen} ${circ}`, fgDash: `${fill} ${circ}` };
+             bgDash: `${arcLen} ${circ}`, fgDash };
   }
 
   // Gráfica izquierda: gap centrado a las ~10:30 h → 300° CW from 3 h

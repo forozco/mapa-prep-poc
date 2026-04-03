@@ -10,10 +10,11 @@
         [attr.stroke-width]="ringL.sw"
         stroke-linecap="butt"
         [attr.stroke-dasharray]="ringL.fgDash"
-        [attr.transform]="'rotate(' + ringL.rot + ',' + CX + ',' + CY + ')'"/>
+        [attr.transform]="'rotate(' + ringL.rot + ',' + CX + ',' + CY + ')'"
+        class="ring-arc"/>
 
       <!-- Círculo interior rosa -->
-      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="rInner" fill="#e91e8c"/>
+      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="rInner" fill="#e91e8c" class="inner-circle"/>
 
       <!-- "100.0000%" dentro del rosa -->
       <text [attr.x]="CX" [attr.y]="CY + 2" class="txt-inner-pct">100.0000%</text>
@@ -22,9 +23,9 @@
       <text [attr.x]="CX" [attr.y]="CY + 82" class="txt-ring-pct">{{ pctStr }}</text>
 
       <!-- ── Callout superior: sube vertical → gira 90° derecha ── -->
-      <polyline points="170,93 170,28 248,28" class="callout-line"/>
-      <text x="252" y="22" class="txt-val-pink">{{ fmt(datos.listaNominalAprobada) }}</text>
-      <text x="252" y="36" class="txt-label-bold">{{ datos.etiquetaAprobada }}</text>
+      <polyline points="170,93 170,47 248,47" class="callout-line"/>
+      <text x="252" y="40" class="txt-val-pink">{{ fmt(datos.listaNominalAprobada) }}</text>
+      <text x="252" y="55" class="txt-label-bold">{{ datos.etiquetaAprobada }}</text>
 
       <!-- ── Callout inferior-izq: diagonal 45° abajo-izq → gira horizontal ── -->
       <polyline points="96,217 56,257 5,257" class="callout-line"/>
@@ -45,10 +46,11 @@
         [attr.stroke-width]="ringR.sw"
         stroke-linecap="butt"
         [attr.stroke-dasharray]="ringR.fgDash"
-        [attr.transform]="'rotate(' + ringR.rot + ',' + CX + ',' + CY + ')'"/>
+        [attr.transform]="'rotate(' + ringR.rot + ',' + CX + ',' + CY + ')'"
+        class="ring-arc"/>
 
       <!-- Círculo interior rosa -->
-      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="rInner" fill="#e91e8c"/>
+      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="rInner" fill="#e91e8c" class="inner-circle"/>
 
       <!-- Texto dentro: etiqueta + valor -->
       <text [attr.x]="CX" [attr.y]="CY - 12" class="txt-inner-label-sm">Lista nominal</text>

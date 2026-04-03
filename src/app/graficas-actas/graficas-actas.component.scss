@@ -106,4 +106,56 @@
   fill: none;
   stroke: #3d1270;
   stroke-width: 1.2;
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out 1.3s forwards;
+}
+
+// ── Animaciones ─────────────────────────────────────────────────────────────
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.5); }
+  70%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+// El anillo usa transition en lugar de animation para que la señal
+// controle el estado inicial (0 → fill) con easing suave
+.ring-arc {
+  transition: stroke-dasharray 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Círculo rosa: pop in después del anillo
+.inner-circle {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: popIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) 1s forwards;
+}
+
+// Texto dentro del rosa
+.txt-inner-pct,
+.txt-inner-label-sm,
+.txt-inner-val-lg {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out 1.3s forwards;
+}
+
+// Porcentaje en la banda morada
+.txt-ring-pct {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out 1.2s forwards;
+}
+
+// Callout labels y valores
+.txt-val-pink,
+.txt-val-purple,
+.txt-val-purple-lg,
+.txt-label,
+.txt-label-bold {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out 1.5s forwards;
 }
