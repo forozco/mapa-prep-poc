@@ -5,6 +5,7 @@ import {
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
+import { GraficasActasComponent } from '../graficas-actas/graficas-actas.component';
 
 export interface Partido {
   id: string;
@@ -41,7 +42,7 @@ interface FilaPartido extends Partido {
 @Component({
   selector: 'app-mapa-distritos',
   standalone: true,
-  imports: [],
+  imports: [GraficasActasComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mapa-distritos.component.html',
   styleUrl: './mapa-distritos.component.scss'

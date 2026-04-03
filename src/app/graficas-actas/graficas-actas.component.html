@@ -1,0 +1,81 @@
+<div class="graficas-section">
+
+  <!-- ───────────────────────── GRÁFICA 1 (porcentajes) ───────────────── -->
+  <div class="grafica-card">
+    <svg viewBox="0 0 340 310" class="donut-svg">
+
+      <!-- Anillo fondo tenue -->
+      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="ringL.r"
+        fill="none" stroke="#5c2d91" stroke-opacity="0.22"
+        [attr.stroke-width]="ringL.sw"
+        [attr.stroke-dasharray]="ringL.bgDash"
+        [attr.transform]="'rotate(' + ringL.rot + ',' + CX + ',' + CY + ')'"/>
+
+      <!-- Anillo relleno (bordes cuadrados) -->
+      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="ringL.r"
+        fill="none" stroke="#5c2d91"
+        [attr.stroke-width]="ringL.sw"
+        stroke-linecap="butt"
+        [attr.stroke-dasharray]="ringL.fgDash"
+        [attr.transform]="'rotate(' + ringL.rot + ',' + CX + ',' + CY + ')'"/>
+
+      <!-- Círculo interior rosa -->
+      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="rInner" fill="#e91e8c"/>
+
+      <!-- "100.0000%" dentro del rosa -->
+      <text [attr.x]="CX" [attr.y]="CY + 2" class="txt-inner-pct">100.0000%</text>
+
+      <!-- Porcentaje debajo del donut -->
+      <text [attr.x]="CX + 8" [attr.y]="CY + 98" class="txt-outer-pct">{{ pctStr }}</text>
+
+      <!-- ── Callout superior: sube vertical → gira 90° derecha ── -->
+      <polyline points="152,78 152,28 228,28" class="callout-line"/>
+      <text x="232" y="22" class="txt-val-pink">{{ fmt(datos.listaNominalAprobada) }}</text>
+      <text x="232" y="36" class="txt-label-bold">{{ datos.etiquetaAprobada }}</text>
+
+      <!-- ── Callout inferior-izq: diagonal 45° abajo-izq → gira horizontal ── -->
+      <polyline points="76,212 36,252 5,252" class="callout-line"/>
+      <text x="5" y="268" class="txt-val-purple">{{ fmt(datos.listaNominalContabilizada) }}</text>
+      <text x="5" y="281" class="txt-label">Lista nominal de actas</text>
+      <text x="5" y="293" class="txt-label">contabilizadas</text>
+
+    </svg>
+  </div>
+
+  <!-- ───────────────────────── GRÁFICA 2 (valores) ───────────────────── -->
+  <div class="grafica-card">
+    <svg viewBox="0 0 340 310" class="donut-svg">
+
+      <!-- Anillo fondo tenue -->
+      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="ringR.r"
+        fill="none" stroke="#5c2d91" stroke-opacity="0.22"
+        [attr.stroke-width]="ringR.sw"
+        [attr.stroke-dasharray]="ringR.bgDash"
+        [attr.transform]="'rotate(' + ringR.rot + ',' + CX + ',' + CY + ')'"/>
+
+      <!-- Anillo relleno (bordes cuadrados) -->
+      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="ringR.r"
+        fill="none" stroke="#5c2d91"
+        [attr.stroke-width]="ringR.sw"
+        stroke-linecap="butt"
+        [attr.stroke-dasharray]="ringR.fgDash"
+        [attr.transform]="'rotate(' + ringR.rot + ',' + CX + ',' + CY + ')'"/>
+
+      <!-- Círculo interior rosa -->
+      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="rInner" fill="#e91e8c"/>
+
+      <!-- Texto dentro: etiqueta + valor -->
+      <text [attr.x]="CX" [attr.y]="CY - 12" class="txt-inner-label-sm">Lista nominal</text>
+      <text [attr.x]="CX" [attr.y]="CY + 2"  class="txt-inner-label-sm">aprobada</text>
+      <text [attr.x]="CX" [attr.y]="CY + 22" class="txt-inner-val-lg">{{ fmt(datos.listaNominalAprobada) }}</text>
+
+      <!-- ── Callout derecho: diagonal arriba-der → gira horizontal ── -->
+      <polyline points="218,108 248,88 268,88" class="callout-line"/>
+      <text x="268" y="82" class="txt-label">Lista nominal de actas</text>
+      <text x="268" y="95" class="txt-label">contabilizadas</text>
+      <text x="268" y="115" class="txt-val-purple-lg">{{ fmt(datos.listaNominalContabilizada) }}</text>
+
+    </svg>
+  </div>
+
+</div>
