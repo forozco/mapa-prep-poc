@@ -87,7 +87,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
   private _zoom = 1;
   private _panX = 0;
   private _panY = 0;
-  private readonly ZOOM_MIN = 0.5;
+  private readonly ZOOM_MIN = 1;
   private readonly ZOOM_MAX = 40;
   private _zoomSig = signal(1);
   canZoomOut = computed(() => this._zoomSig() > 1);
@@ -134,6 +134,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     this._panX = cx - (cx - this._panX) * ratio;
     this._panY = cy - (cy - this._panY) * ratio;
     this._zoom = newZoom;
+    if (newZoom === this.ZOOM_MIN) { this._panX = 0; this._panY = 0; }
     this._zoomSig.set(newZoom);
     this._updateStrokeWidth();
     this._setTransition('200ms');
@@ -165,6 +166,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     this._panX = ax - (ax - this._panX) * ratio;
     this._panY = ay - (ay - this._panY) * ratio;
     this._zoom = newZoom;
+    if (newZoom === this.ZOOM_MIN) { this._panX = 0; this._panY = 0; }
     this._zoomSig.set(newZoom);
     this._updateStrokeWidth();
     this._clampPan();
@@ -188,6 +190,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
       this._setTransition('none');
       this._panX -= e.deltaX;
       this._panY -= e.deltaY;
+      this._clampPan();
       this._commitTransform();
       return;
     }
@@ -195,6 +198,7 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     if (Date.now() < this._trackpadUntil) {
       // Continuación de gesto trackpad → pan vertical directo
       this._panY -= e.deltaY;
+      this._clampPan();
       this._commitTransform();
       return;
     }
@@ -514,9 +518,11 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
     const H  = wrap.clientHeight;
     const sW = cont.clientWidth  * this._zoom;
     const sH = cont.clientHeight * this._zoom;
-    const m  = 80; // mínimo de píxeles visibles
-    this._panX = Math.min(W - m, Math.max(m - sW, this._panX));
-    this._panY = Math.min(H - m, Math.max(m - sH, this._panY));
+    // El contenido nunca puede desplazarse más allá de sus bordes:
+    // panX en [W - sW, 0]  → borde derecho e izquierdo siempre cubiertos
+    // panY en [H - sH, 0]  → borde superior e inferior siempre cubiertos
+    this._panX = Math.min(0, Math.max(W - sW, this._panX));
+    this._panY = Math.min(0, Math.max(H - sH, this._panY));
   }
 
   private onPolyHover(_e: MouseEvent, path: SVGPathElement): void {

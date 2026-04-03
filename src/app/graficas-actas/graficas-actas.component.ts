@@ -19,6 +19,11 @@ export class GraficasActasComponent implements OnInit {
 
   private readonly _animated = signal(false);
 
+  // Señales para los valores animados (count-up)
+  readonly animPct          = signal(0);
+  readonly animAprobada     = signal(0);
+  readonly animContabilizada = signal(0);
+
   @Input() datos: DatosCobertura = {
     listaNominalAprobada:      349_230,
     listaNominalContabilizada: 330_648,
@@ -27,46 +32,62 @@ export class GraficasActasComponent implements OnInit {
   };
 
   // ── Geometría ─────────────────────────────────────────────────────────
-  //  Anillo: r=88, stroke=30  →  borde exterior a r+15=103, interior a r-15=73
-  //  Círculo rosa: r=62
-  private readonly R       = 82;      // centro del trazo del anillo
-  private readonly SW      = 40;      // grosor → borde interior a R-20=62 = R_INNER
+  private readonly R       = 82;
+  private readonly SW      = 40;
   private readonly R_INNER = 62;
-  private readonly GAP     = 55;        // grados de apertura
+  private readonly GAP     = 55;
 
   readonly CX = 170;
   readonly CY = 155;
   readonly rInner = this.R_INNER;
 
   ngOnInit() {
-    setTimeout(() => this._animated.set(true), 50);
+    const DURATION = 2000; // ms — más largo para que el count-up sea visible
+
+    setTimeout(() => {
+      this._animated.set(true);
+      this.countUp(0, this.pct,                          DURATION, v => this.animPct.set(v));
+      this.countUp(0, this.datos.listaNominalAprobada,   DURATION, v => this.animAprobada.set(v));
+      this.countUp(0, this.datos.listaNominalContabilizada, DURATION, v => this.animContabilizada.set(v));
+    }, 50);
+  }
+
+  /** Anima un valor numérico de `from` a `to` en `duration` ms con ease-out cúbico */
+  private countUp(from: number, to: number, duration: number, cb: (v: number) => void) {
+    const start = performance.now();
+    const step  = (now: number) => {
+      const p    = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);          // ease-out cubic
+      cb(from + (to - from) * ease);
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
 
   get pct(): number {
     const { listaNominalAprobada: a, listaNominalContabilizada: c } = this.datos;
     return a > 0 ? (c / a) * 100 : 0;
   }
-  get pctStr(): string { return this.pct.toFixed(4) + '%'; }
 
-  /** Parámetros SVG para el donut — rotación en grados pone el gap en la posición indicada */
+  // Formatos para la plantilla usando los valores animados
+  get animPctStr():            string { return this.animPct().toFixed(4) + '%'; }
+  get animPctInnerStr():       string { return (this.animPct() / this.pct * 100).toFixed(4) + '%'; }
+  get animAprobadaStr():       string { return this.fmt(Math.round(this.animAprobada())); }
+  get animContabilizadaStr():  string { return this.fmt(Math.round(this.animContabilizada())); }
+
+  /** Parámetros SVG para el donut */
   ring(gapCenterDeg: number) {
     const circ   = 2 * Math.PI * this.R;
     const arcDeg = 360 - this.GAP;
     const arcLen = circ * arcDeg / 360;
     const fill   = arcLen * this.pct / 100;
-    // El stroke empieza a las 3 h (0°). Girar para que el gap quede en gapCenterDeg.
-    // gap centro a las 12 h = 270° SVG  →  rot = 270 - gapCenterDeg/2 ... mejor:
-    // Con gap centrado en ángulo θ (en CW from 3-o'clock), la primera punta del arco
-    // está en θ + gap/2. El stroke empieza en 0°, así que rotamos (θ + gap/2).
-    const rot = gapCenterDeg + this.GAP / 2;
+    const rot    = gapCenterDeg + this.GAP / 2;
     const fgDash = this._animated() ? `${fill} ${circ}` : `0 ${circ}`;
     return { r: this.R, sw: this.SW, arcLen, fill, rot, circ,
              bgDash: `${arcLen} ${circ}`, fgDash };
   }
 
-  // Gráfica izquierda: gap centrado a las ~10:30 h → 300° CW from 3 h
   get ringL() { return this.ring(300); }
-  // Gráfica derecha: gap centrado a las ~1:30 h  → 240° CW from 3 h
   get ringR() { return this.ring(240); }
 
   fmt(n: number): string { return n.toLocaleString('es-MX'); }
