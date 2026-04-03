@@ -372,7 +372,8 @@ export class MapaDistritosComponent implements OnInit, AfterViewInit, OnDestroy 
       const el = container.querySelector('svg');
       if (!el) return;
       this.svgEl = el as SVGSVGElement;
-      this.svgEl.style.width           = '100%';
+      this.svgEl.style.height          = '100%';
+      this.svgEl.style.width           = 'auto';
       this.svgEl.style.display         = 'block';
       this.svgEl.style.transformOrigin  = '0 0';
       this.svgEl.style.shapeRendering  = 'geometricPrecision';

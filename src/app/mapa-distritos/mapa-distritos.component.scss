@@ -200,16 +200,23 @@
   padding: 10px;
   position: relative;
   overflow: hidden;
+  height: calc(100vh - 200px);
 }
 
 
 .mapa-svg-container {
   width: 100%;
-  display: block;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   svg {
     will-change: transform;
     background: #dce8f0;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
   }
 }
 
