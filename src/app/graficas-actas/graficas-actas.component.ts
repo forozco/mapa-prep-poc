@@ -32,8 +32,8 @@ export class GraficasActasComponent {
   private readonly R_INNER = 62;
   private readonly GAP     = 55;        // grados de apertura
 
-  readonly CX = 150;
-  readonly CY = 150;
+  readonly CX = 170;
+  readonly CY = 155;
   readonly rInner = this.R_INNER;
 
   get pct(): number {

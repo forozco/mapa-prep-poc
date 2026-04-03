@@ -22,15 +22,15 @@
       <text [attr.x]="CX" [attr.y]="CY + 82" class="txt-ring-pct">{{ pctStr }}</text>
 
       <!-- ── Callout superior: sube vertical → gira 90° derecha ── -->
-      <polyline points="152,78 152,28 228,28" class="callout-line"/>
-      <text x="232" y="22" class="txt-val-pink">{{ fmt(datos.listaNominalAprobada) }}</text>
-      <text x="232" y="36" class="txt-label-bold">{{ datos.etiquetaAprobada }}</text>
+      <polyline points="172,83 172,28 248,28" class="callout-line"/>
+      <text x="252" y="22" class="txt-val-pink">{{ fmt(datos.listaNominalAprobada) }}</text>
+      <text x="252" y="36" class="txt-label-bold">{{ datos.etiquetaAprobada }}</text>
 
       <!-- ── Callout inferior-izq: diagonal 45° abajo-izq → gira horizontal ── -->
-      <polyline points="76,212 36,252 5,252" class="callout-line"/>
-      <text x="5" y="268" class="txt-val-purple">{{ fmt(datos.listaNominalContabilizada) }}</text>
-      <text x="5" y="281" class="txt-label">Lista nominal de actas</text>
-      <text x="5" y="293" class="txt-label">contabilizadas</text>
+      <polyline points="96,217 56,257 5,257" class="callout-line"/>
+      <text x="5" y="273" class="txt-val-purple">{{ fmt(datos.listaNominalContabilizada) }}</text>
+      <text x="5" y="286" class="txt-label">Lista nominal de actas</text>
+      <text x="5" y="298" class="txt-label">contabilizadas</text>
 
     </svg>
   </div>
@@ -56,10 +56,10 @@
       <text [attr.x]="CX" [attr.y]="CY + 22" class="txt-inner-val-lg">{{ fmt(datos.listaNominalAprobada) }}</text>
 
       <!-- ── Callout derecho: diagonal arriba-der → gira horizontal ── -->
-      <polyline points="218,108 248,88 268,88" class="callout-line"/>
-      <text x="268" y="82" class="txt-label">Lista nominal de actas</text>
-      <text x="268" y="95" class="txt-label">contabilizadas</text>
-      <text x="268" y="115" class="txt-val-purple-lg">{{ fmt(datos.listaNominalContabilizada) }}</text>
+      <polyline points="238,113 268,93 288,93" class="callout-line"/>
+      <text x="288" y="87" class="txt-label">Lista nominal de actas</text>
+      <text x="288" y="100" class="txt-label">contabilizadas</text>
+      <text x="288" y="120" class="txt-val-purple-lg">{{ fmt(datos.listaNominalContabilizada) }}</text>
 
     </svg>
   </div>
