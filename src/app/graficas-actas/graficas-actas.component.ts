@@ -38,7 +38,7 @@ export class GraficasActasComponent implements OnInit {
   private readonly R_INNER = 62;
 
   readonly CX = 170;
-  readonly CY = 155;
+  readonly CY = 170;
   readonly rInner = this.R_INNER;
 
   ngOnInit() {
