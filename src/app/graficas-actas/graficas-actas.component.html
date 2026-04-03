@@ -4,13 +4,6 @@
   <div class="grafica-card">
     <svg viewBox="0 0 340 310" class="donut-svg">
 
-      <!-- Anillo fondo tenue -->
-      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="ringL.r"
-        fill="none" stroke="#5c2d91" stroke-opacity="0.22"
-        [attr.stroke-width]="ringL.sw"
-        [attr.stroke-dasharray]="ringL.bgDash"
-        [attr.transform]="'rotate(' + ringL.rot + ',' + CX + ',' + CY + ')'"/>
-
       <!-- Anillo relleno (bordes cuadrados) -->
       <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="ringL.r"
         fill="none" stroke="#5c2d91"
@@ -25,8 +18,8 @@
       <!-- "100.0000%" dentro del rosa -->
       <text [attr.x]="CX" [attr.y]="CY + 2" class="txt-inner-pct">100.0000%</text>
 
-      <!-- Porcentaje debajo del donut -->
-      <text [attr.x]="CX + 8" [attr.y]="CY + 98" class="txt-outer-pct">{{ pctStr }}</text>
+      <!-- Porcentaje centrado en la franja morada inferior (entre rosa y anillo) -->
+      <text [attr.x]="CX" [attr.y]="CY + 82" class="txt-ring-pct">{{ pctStr }}</text>
 
       <!-- ── Callout superior: sube vertical → gira 90° derecha ── -->
       <polyline points="152,78 152,28 228,28" class="callout-line"/>
@@ -45,13 +38,6 @@
   <!-- ───────────────────────── GRÁFICA 2 (valores) ───────────────────── -->
   <div class="grafica-card">
     <svg viewBox="0 0 340 310" class="donut-svg">
-
-      <!-- Anillo fondo tenue -->
-      <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="ringR.r"
-        fill="none" stroke="#5c2d91" stroke-opacity="0.22"
-        [attr.stroke-width]="ringR.sw"
-        [attr.stroke-dasharray]="ringR.bgDash"
-        [attr.transform]="'rotate(' + ringR.rot + ',' + CX + ',' + CY + ')'"/>
 
       <!-- Anillo relleno (bordes cuadrados) -->
       <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="ringR.r"

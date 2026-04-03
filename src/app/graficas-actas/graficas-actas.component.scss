@@ -31,12 +31,12 @@
   dominant-baseline: middle;
 }
 
-// "94.7000%" morado debajo del donut
-.txt-outer-pct {
+// "94.7000%" blanco centrado en la franja morada
+.txt-ring-pct {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  fill: #e91e8c;
+  font-size: 14px;
+  font-weight: 700;
+  fill: white;
   text-anchor: middle;
   dominant-baseline: middle;
 }
