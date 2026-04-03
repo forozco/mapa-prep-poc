@@ -87,12 +87,18 @@ export class GraficasActasComponent implements OnInit {
     const rot        = gapCenterDeg + gap / 2;
     const fgDash = this._animated() ? `${fill} ${circ}` : `0 ${circ}`;
 
-    // Punto en el borde del círculo rosa en la dirección del hueco → la línea pasa por el gap
+    // Puntos a lo largo del radio del hueco (la línea cruza el gap en diagonal)
     const gapRad = gapCenterDeg * Math.PI / 180;
-    const innerX = Math.round(this.CX + this.R_INNER * Math.cos(gapRad));
-    const innerY = Math.round(this.CY + this.R_INNER * Math.sin(gapRad));
+    const cosG   = Math.cos(gapRad);
+    const sinG   = Math.sin(gapRad);
+    // Fuera del anillo (punto de entrada al gap, desde el texto)
+    const outerX = Math.round(this.CX + (this.R + this.SW / 2 + 8) * cosG);
+    const outerY = Math.round(this.CY + (this.R + this.SW / 2 + 8) * sinG);
+    // Borde del círculo rosa (punto final dentro del gap)
+    const innerX = Math.round(this.CX + this.R_INNER * cosG);
+    const innerY = Math.round(this.CY + this.R_INNER * sinG);
 
-    return { r: this.R, sw: this.SW, arcLen, fill, rot, circ, fgDash, innerX, innerY };
+    return { r: this.R, sw: this.SW, arcLen, fill, rot, circ, fgDash, outerX, outerY, innerX, innerY };
   }
 
   // izquierdo: % contabilizadas vs aprobadas (94.67%)

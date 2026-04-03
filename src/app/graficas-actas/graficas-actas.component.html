@@ -23,7 +23,7 @@
       <text [attr.x]="CX" [attr.y]="CY + 82" class="txt-ring-pct">{{ animPctStr }}</text>
 
       <!-- ── Callout: desde el borde del círculo rosa hacia el texto ── -->
-      <polyline [attr.points]="'248,47 ' + ringL.innerX + ',47 ' + ringL.innerX + ',' + ringL.innerY" class="callout-line"/>
+      <polyline [attr.points]="'248,47 ' + ringL.outerX + ',' + ringL.outerY + ' ' + ringL.innerX + ',' + ringL.innerY" class="callout-line"/>
       <text x="252" y="40" class="txt-val-pink">{{ animAprobadaStr }}</text>
       <text x="252" y="55" class="txt-label-bold">{{ datos.etiquetaAprobada }}</text>
 
