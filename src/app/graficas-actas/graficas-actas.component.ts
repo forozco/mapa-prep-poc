@@ -57,9 +57,9 @@ export class GraficasActasComponent {
              bgDash: `${arcLen} ${circ}`, fgDash: `${fill} ${circ}` };
   }
 
-  // Gráfica izquierda: gap centrado a las ~10:30 h → ≈315° CW from 3 h (= -45° = 315°)
+  // Gráfica izquierda: gap centrado a las ~10:30 h → 300° CW from 3 h
   get ringL() { return this.ring(300); }
-  // Gráfica derecha: gap centrado a las ~1:30 h  → ≈60° CW from 3 h
+  // Gráfica derecha: gap centrado a las ~1:30 h  → 240° CW from 3 h
   get ringR() { return this.ring(240); }
 
   fmt(n: number): string { return n.toLocaleString('es-MX'); }

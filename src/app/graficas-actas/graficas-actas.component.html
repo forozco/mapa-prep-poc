@@ -6,7 +6,7 @@
 
       <!-- Anillo relleno (bordes cuadrados) -->
       <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="ringL.r"
-        fill="none" stroke="#5c2d91"
+        fill="none" stroke="#3d1270"
         [attr.stroke-width]="ringL.sw"
         stroke-linecap="butt"
         [attr.stroke-dasharray]="ringL.fgDash"
@@ -22,7 +22,7 @@
       <text [attr.x]="CX" [attr.y]="CY + 82" class="txt-ring-pct">{{ pctStr }}</text>
 
       <!-- ── Callout superior: sube vertical → gira 90° derecha ── -->
-      <polyline points="172,83 172,28 248,28" class="callout-line"/>
+      <polyline points="170,93 170,28 248,28" class="callout-line"/>
       <text x="252" y="22" class="txt-val-pink">{{ fmt(datos.listaNominalAprobada) }}</text>
       <text x="252" y="36" class="txt-label-bold">{{ datos.etiquetaAprobada }}</text>
 
@@ -41,7 +41,7 @@
 
       <!-- Anillo relleno (bordes cuadrados) -->
       <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="ringR.r"
-        fill="none" stroke="#5c2d91"
+        fill="none" stroke="#3d1270"
         [attr.stroke-width]="ringR.sw"
         stroke-linecap="butt"
         [attr.stroke-dasharray]="ringR.fgDash"
