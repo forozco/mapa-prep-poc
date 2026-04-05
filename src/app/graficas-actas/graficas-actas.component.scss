@@ -7,6 +7,8 @@
   padding: 40px 24px 32px;
   background: #e8e8e8;
   flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeIn 0.6s ease-out forwards;
 }
 
 .grafica-card {
@@ -33,7 +35,6 @@
 
 // ── Textos dentro del donut ─────────────────────────────────────────────────
 
-// "100.0000%" blanco centrado en el círculo rosa
 .txt-inner-pct {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-size: 16px;
@@ -43,7 +44,6 @@
   dominant-baseline: middle;
 }
 
-// "94.7000%" blanco centrado en la franja morada
 .txt-ring-pct {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-size: 14px;
@@ -112,14 +112,24 @@
   fill: #333;
 }
 
-// ── Líneas de callout ───────────────────────────────────────────────────────
+// ── Líneas de callout: se revelan suavemente tras el ring ───────────────────
 
 .callout-line {
   fill: none;
   stroke: #3d1270;
   stroke-width: 1.2;
   opacity: 0;
-  animation: fadeIn 0.4s ease-out 1.5s forwards;
+  animation: fadeIn 0.8s ease-out 2.2s forwards;
+}
+
+// Etiquetas y valores de callout: aparecen junto con las líneas
+.txt-label,
+.txt-label-bold,
+.txt-val-pink,
+.txt-val-purple,
+.txt-val-purple-lg {
+  opacity: 0;
+  animation: fadeIn 0.8s ease-out 2.2s forwards;
 }
 
 // ── Animaciones ─────────────────────────────────────────────────────────────
@@ -134,13 +144,12 @@
   100% { opacity: 1; transform: scale(1); }
 }
 
-// El anillo usa transition en lugar de animation para que la señal
-// controle el estado inicial (0 → fill) con easing suave
+// El anillo usa transition para que la señal controle 0 → fill con easing suave
 .ring-arc {
   transition: stroke-dasharray 1.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-// Círculo rosa: aparece de inmediato para que los textos blancos no queden sobre fondo blanco
+// Círculo rosa: aparece casi de inmediato para que los textos blancos tengan fondo
 .inner-circle {
   transform-box: fill-box;
   transform-origin: center;
@@ -148,20 +157,10 @@
   animation: popIn 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) 0.1s forwards;
 }
 
-// Etiquetas estáticas: fade-in después del ring
-.txt-inner-label-sm,
-.txt-label,
-.txt-label-bold {
-  opacity: 0;
-  animation: fadeIn 0.5s ease-out 1.5s forwards;
-}
-
-// Valores animados: visibles desde el inicio para que se vea el count-up
+// Textos dentro del rosa: visibles desde el inicio (sobre fondo rosa)
 .txt-inner-pct,
+.txt-inner-label-sm,
 .txt-inner-val-lg,
-.txt-ring-pct,
-.txt-val-pink,
-.txt-val-purple,
-.txt-val-purple-lg {
+.txt-ring-pct {
   opacity: 1;
 }

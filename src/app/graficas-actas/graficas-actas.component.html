@@ -17,19 +17,19 @@
       <circle [attr.cx]="CX" [attr.cy]="CY" [attr.r]="rInner" fill="#e91e8c" class="inner-circle"/>
 
       <!-- "100.0000%" dentro del rosa -->
-      <text [attr.x]="CX" [attr.y]="CY + 2" class="txt-inner-pct">{{ animPctInnerStr }}</text>
+      <text [attr.x]="CX" [attr.y]="CY + 2" class="txt-inner-pct">{{ pctInnerStr }}</text>
 
       <!-- Porcentaje centrado en la franja morada inferior (entre rosa y anillo) -->
-      <text [attr.x]="CX" [attr.y]="CY + 82" class="txt-ring-pct">{{ animPctStr }}</text>
+      <text [attr.x]="CX" [attr.y]="CY + 82" class="txt-ring-pct">{{ pctStr }}</text>
 
       <!-- ── Callout: desde el borde del círculo rosa hacia el texto ── -->
       <polyline [attr.points]="'248,62 ' + ringL.outerX + ',' + ringL.outerY + ' ' + ringL.innerX + ',' + ringL.innerY" class="callout-line"/>
-      <text x="252" y="55" class="txt-val-pink">{{ animAprobadaStr }}</text>
+      <text x="252" y="55" class="txt-val-pink">{{ aprobadaStr }}</text>
       <text x="252" y="70" class="txt-label-bold">{{ datos.etiquetaAprobada }}</text>
 
       <!-- ── Callout inferior-izq: diagonal 45° abajo-izq → gira horizontal ── -->
       <polyline points="96,232 56,272 5,272" class="callout-line"/>
-      <text x="5" y="288" class="txt-val-purple">{{ animContabilizadaStr }}</text>
+      <text x="5" y="288" class="txt-val-purple">{{ contabilizadaStr }}</text>
       <text x="5" y="301" class="txt-label">Lista nominal de actas</text>
       <text x="5" y="313" class="txt-label">contabilizadas</text>
 
@@ -55,13 +55,13 @@
       <!-- Texto dentro: etiqueta + valor -->
       <text [attr.x]="CX" [attr.y]="CY - 20" class="txt-inner-label-sm">Lista nominal</text>
       <text [attr.x]="CX" [attr.y]="CY - 6"  class="txt-inner-label-sm">aprobada</text>
-      <text [attr.x]="CX" [attr.y]="CY + 14" class="txt-inner-val-lg">{{ animAprobadaStr }}</text>
+      <text [attr.x]="CX" [attr.y]="CY + 14" class="txt-inner-val-lg">{{ aprobadaStr }}</text>
 
       <!-- ── Callout derecho: diagonal arriba-der → gira horizontal ── -->
       <polyline points="238,128 268,108 288,108" class="callout-line"/>
       <text x="288" y="102" class="txt-label">Lista nominal de actas</text>
       <text x="288" y="115" class="txt-label">contabilizadas</text>
-      <text x="288" y="135" class="txt-val-purple-lg">{{ animContabilizadaStr }}</text>
+      <text x="288" y="135" class="txt-val-purple-lg">{{ contabilizadaStr }}</text>
 
     </svg>
   </div>
